@@ -169,8 +169,6 @@ This setup includes only **network/sysadmin relevant** MCP servers:
 | `mongodb` | Database operations | ⏸️ Disabled |
 | `ssh` | Remote host management | ⏸️ Disabled |
 
-**Excluded** (not relevant for network ops): Chrome DevTools, Playwright, Puppeteer, Excel, Slack, Notion, Figma, Stripe, etc.
-
 ---
 
 ## 📝 Example Prompts
