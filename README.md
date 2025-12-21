@@ -5,6 +5,9 @@
 [![PowerShell](https://img.shields.io/badge/PowerShell-7+-blue.svg)](https://github.com/PowerShell/PowerShell)
 [![GitHub Copilot](https://img.shields.io/badge/GitHub_Copilot-CLI-purple.svg)](https://github.com/features/copilot)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io/)
+[![GitHub](https://img.shields.io/github/stars/djcyphers/network-copilot-cli?style=social)](https://github.com/djcyphers/network-copilot-cli)
+
+**Repository:** [github.com/djcyphers/network-copilot-cli](https://github.com/djcyphers/network-copilot-cli)
 
 ---
 
