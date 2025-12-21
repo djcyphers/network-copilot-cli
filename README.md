@@ -40,7 +40,7 @@ A ready-to-use Copilot CLI configuration for **network administrators** and **Wi
 
 ---
 
-## 🧠 Agent Skills System (1000 IQ Feature)
+## 🧠 Agent Skills System
 
 Inspired by the [Agent Skills Standard](https://agentskills.io), this setup uses **progressive disclosure** to save context window:
 
