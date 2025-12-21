@@ -97,19 +97,23 @@ copilot
 # Copy to your preferred location
 Copy-Item -Path ".\copcli" -Destination "C:\Tools\copcli" -Recurse
 
-# Run the installer (one time only)
+# Run the full installer (first time setup - does everything)
 cd C:\Tools\copcli
-.\install.ps1
-
-# Optional: also install MCP servers
-.\install.ps1 -InstallMCP
+.\install.ps1 -Full
 ```
 
-That's it. The installer:
-- Auto-detects its location
-- Adds one line to your `$PROFILE`  
+The `-Full` flag:
+- Installs Copilot CLI (prerelease)
+- Installs all MCP servers
+- Deploys config to `~/.copilot/`
+- Adds profile loader to `$PROFILE`
 - Creates `.env` from template
-- Verifies Copilot CLI is installed
+
+> **Other install options:**
+> - `.\install.ps1` — Profile setup only (no npm installs)
+> - `.\install.ps1 -InstallCopilot` — Just Copilot CLI
+> - `.\install.ps1 -InstallMCP` — Just MCP servers
+> - `.\install.ps1 -Uninstall` — Remove from profile
 
 ### 3. Open New PowerShell & Start Using
 
