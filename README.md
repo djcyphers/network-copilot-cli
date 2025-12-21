@@ -83,7 +83,9 @@ allowed-tools:
 
 ```powershell
 npm install -g @github/copilot@prerelease
-copilot auth login
+copilot
+# Inside Copilot CLI, type: /login
+# Follow the browser OAuth flow to authenticate
 ```
 
 ### 2. Copy This Folder Anywhere & Run Installer

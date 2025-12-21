@@ -30,8 +30,10 @@ npm install -g @github/copilot@prerelease
 # Verify installation
 copilot --version
 
-# Authenticate with GitHub
-copilot auth login
+# Authenticate with GitHub (run copilot, then type /login inside)
+copilot
+# Inside the CLI, type: /login
+# Follow the browser OAuth flow
 ```
 
 ### Step 2: Copy Folder & Run Installer
