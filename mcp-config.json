@@ -1,0 +1,45 @@
+{
+  "mcpServers": {
+    "windows-command-line": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@alxspiker/windows-command-line-mcp"],
+      "tools": [""]
+    },
+
+    "windows-mcp": {
+      "type": "local",
+      "command": "uvx",
+      "args": ["windows-mcp"],
+      "tools": [""]
+    },
+
+    "console-automation": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "console-automation-mcp", "--log-level", "info"],
+      "tools": [""]
+    },
+
+    "sequential-thinking": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "tools": [""]
+    },
+
+    "memory": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "tools": [""]
+    },
+
+    "filesystem": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "D:\\"],
+      "tools": [""]
+    }
+  }
+}
