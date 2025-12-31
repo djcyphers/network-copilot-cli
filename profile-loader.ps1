@@ -112,7 +112,9 @@ function script:Initialize-CopCLIEnvironment {
                 $value = $matches[2].Trim().Trim('"').Trim("'")
                 
                 # Only set if variable doesn't already exist (non-interfering)
-                if (-not (Test-Path "env:$name")) {
+                # Using Get-Item for safety instead of Test-Path with string interpolation
+                $existingVar = Get-Item -Path "env:$name" -ErrorAction SilentlyContinue
+                if (-not $existingVar) {
                     [Environment]::SetEnvironmentVariable($name, $value, "Process")
                     $loadedCount++
                     if ($script:VerboseLoad) {
