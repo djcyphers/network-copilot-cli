@@ -155,6 +155,7 @@ function Start-NetworkCopilot {
     )
     
     # Lazy-load environment variables when needed
+    # Note: This call is safe - function doesn't throw errors
     Initialize-CopCLIEnvironment
     
     $agentFile = Join-Path $env:COPCLI_HOME "AGENTS.md"
@@ -454,7 +455,19 @@ function Show-Prompts {
 #region Status Display
 
 function Show-CopCLIStatus {
-    <# Show status of Copilot CLI environment #>
+    <#
+    .SYNOPSIS
+        Show status of Copilot CLI environment
+    .DESCRIPTION
+        Displays comprehensive status information about the Network Copilot CLI
+        environment including installed tools, environment variables, and config files.
+        Triggers lazy-loading of environment variables if not already loaded.
+    .EXAMPLE
+        Show-CopCLIStatus
+        Displays full environment status
+    #>
+    [CmdletBinding()]
+    param()
     
     # Lazy-load environment variables when status is requested
     Initialize-CopCLIEnvironment
