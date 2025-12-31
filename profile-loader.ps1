@@ -90,7 +90,7 @@ function script:Initialize-CopCLIEnvironment {
     
     # Prevent duplicate loads unless forced
     if ($global:COPCLI_ENV_LOADED -and -not $Force) {
-        if ($VerboseLoad) {
+        if ($script:VerboseLoad) {
             Write-Host "  [Verbose] Environment already loaded, skipping" -ForegroundColor DarkGray
         }
         return
@@ -111,22 +111,22 @@ function script:Initialize-CopCLIEnvironment {
                 if (-not (Test-Path "env:$name")) {
                     [Environment]::SetEnvironmentVariable($name, $value, "Process")
                     $loadedCount++
-                    if ($VerboseLoad) {
+                    if ($script:VerboseLoad) {
                         Write-Host "  [Verbose] Set: $name" -ForegroundColor DarkGray
                     }
                 } else {
                     $skippedCount++
-                    if ($VerboseLoad) {
+                    if ($script:VerboseLoad) {
                         Write-Host "  [Verbose] Skipped (already set): $name" -ForegroundColor DarkGray
                     }
                 }
             }
         }
         
-        if ($VerboseLoad) {
+        if ($script:VerboseLoad) {
             Write-Host "  [Verbose] Loaded $loadedCount variable(s), skipped $skippedCount existing" -ForegroundColor DarkGray
         }
-    } elseif ($VerboseLoad) {
+    } elseif ($script:VerboseLoad) {
         Write-Host "  [Verbose] No .env file found at: $envFile" -ForegroundColor DarkGray
     }
     
