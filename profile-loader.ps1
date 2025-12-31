@@ -33,6 +33,10 @@ param(
     [switch]$VerboseLoad
 )
 
+# Store parameters in script scope for access by functions
+$script:Quiet = $Quiet
+$script:VerboseLoad = $VerboseLoad
+
 #region Environment Setup
 
 # Auto-detect location - this makes the folder truly portable
@@ -522,8 +526,8 @@ function Show-CopCLIStatus {
 #endregion
 
 # Show loading status based on parameters
-if (-not $Quiet) {
-    if ($VerboseLoad) {
+if (-not $script:Quiet) {
+    if ($script:VerboseLoad) {
         Write-Host "✓ Network Copilot CLI loaded (verbose mode)" -ForegroundColor Green
         Write-Host "  Environment variables will be lazy-loaded when needed" -ForegroundColor DarkGray
         Write-Host "  Type 'Show-CopCLIStatus' for full environment info" -ForegroundColor DarkGray
