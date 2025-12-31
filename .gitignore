@@ -1,0 +1,13 @@
+# Environment variables (never commit secrets)
+.env
+
+# Credentials directory
+.creds/
+
+# PowerShell session state
+*.psstate
+
+# Temporary files
+*.tmp
+*.temp
+*.log
