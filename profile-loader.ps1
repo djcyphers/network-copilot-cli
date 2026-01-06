@@ -3,19 +3,39 @@
     PowerShell profile loader for Network Copilot CLI environment
 .DESCRIPTION
     Source this file from your PowerShell profile to enable:
-    - Environment variables for MCP servers
+    - Environment variables for MCP servers (lazy-loaded)
     - Helpful aliases and functions for network administration
     - Integration with Copilot CLI
     
     PORTABLE: This script auto-detects its location. Just copy the copcli 
     folder anywhere and source this file - no path configuration needed.
+.PARAMETER Quiet
+    Suppresses all output during profile loading
+.PARAMETER VerboseLoad
+    Shows detailed loading information for debugging
 .EXAMPLE
-    # Add to $PROFILE (use the path wherever you put copcli):
+    # Silent mode (default) - minimal output
     . "C:\Tools\copcli\profile-loader.ps1"
-    
-    # Or if copcli is in your PATH:
-    . (Join-Path (Get-Command profile-loader.ps1).Source "..")
+.EXAMPLE
+    # Completely quiet - no output at all
+    . "C:\Tools\copcli\profile-loader.ps1" -Quiet
+.EXAMPLE
+    # Verbose mode - for debugging
+    . "C:\Tools\copcli\profile-loader.ps1" -VerboseLoad
 #>
+
+[CmdletBinding()]
+param(
+    [Parameter()]
+    [switch]$Quiet,
+    
+    [Parameter()]
+    [switch]$VerboseLoad
+)
+
+# Store parameters in script scope for access by functions
+$script:Quiet = $Quiet
+$script:VerboseLoad = $VerboseLoad
 
 #region Environment Setup
 
@@ -30,30 +50,94 @@ $script:ScriptPath = if ($MyInvocation.MyCommand.Path) {
     $null
 }
 
+# Store COPCLI_HOME in script scope and optionally in environment
 if ($script:ScriptPath) {
-    $env:COPCLI_HOME = Split-Path -Parent $script:ScriptPath
-} elseif (-not $env:COPCLI_HOME) {
+    $script:COPCLI_HOME = Split-Path -Parent $script:ScriptPath
+} elseif ($env:COPCLI_HOME) {
+    $script:COPCLI_HOME = $env:COPCLI_HOME
+} else {
     Write-Warning "Could not auto-detect COPCLI_HOME. Set it manually: `$env:COPCLI_HOME = 'path\to\copcli'"
     return
 }
 
 # Verify the directory exists
-if (-not (Test-Path $env:COPCLI_HOME)) {
-    Write-Warning "COPCLI_HOME directory not found: $env:COPCLI_HOME"
+if (-not (Test-Path $script:COPCLI_HOME)) {
+    Write-Warning "COPCLI_HOME directory not found: $script:COPCLI_HOME"
     return
 }
 
-# Load .env file if it exists
-$envFile = Join-Path $env:COPCLI_HOME ".env"
-if (Test-Path $envFile) {
-    Get-Content $envFile | ForEach-Object {
-        if ($_ -match '^\s*([^#][^=]+)=(.*)$') {
-            $name = $matches[1].Trim()
-            $value = $matches[2].Trim().Trim('"').Trim("'")
-            [Environment]::SetEnvironmentVariable($name, $value, "Process")
+# Set environment variable only if not already set (non-interfering)
+if (-not $env:COPCLI_HOME) {
+    $env:COPCLI_HOME = $script:COPCLI_HOME
+}
+
+# Initialize environment loaded flag
+$global:COPCLI_ENV_LOADED = $false
+
+# Lazy-loading function for environment variables
+function script:Initialize-CopCLIEnvironment {
+    <#
+    .SYNOPSIS
+        Lazy-loads environment variables from .env file
+    .DESCRIPTION
+        This function loads environment variables on-demand when they're needed,
+        preventing duplicate loads and only setting variables that don't already exist.
+        Uses a global flag to track loading state.
+    .PARAMETER Force
+        Forces reload of environment variables even if already loaded
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [switch]$Force
+    )
+    
+    # Prevent duplicate loads unless forced
+    if ($global:COPCLI_ENV_LOADED -and -not $Force) {
+        if ($script:VerboseLoad) {
+            Write-Host "  [Verbose] Environment already loaded, skipping" -ForegroundColor DarkGray
         }
+        return
     }
-    Write-Host "✓ Loaded environment from .env" -ForegroundColor DarkGray
+    
+    # Load .env file if it exists
+    $envFile = Join-Path $script:COPCLI_HOME ".env"
+    if (Test-Path $envFile) {
+        $loadedCount = 0
+        $skippedCount = 0
+        
+        Get-Content $envFile | ForEach-Object {
+            if ($_ -match '^\s*([^#][^=]+)=(.*)$') {
+                $name = $matches[1].Trim()
+                $value = $matches[2].Trim().Trim('"').Trim("'")
+                
+                # Only set if variable doesn't already exist (non-interfering)
+                # Using Get-Item for safety instead of Test-Path with string interpolation
+                $existingVar = Get-Item -Path "env:$name" -ErrorAction SilentlyContinue
+                if (-not $existingVar) {
+                    [Environment]::SetEnvironmentVariable($name, $value, "Process")
+                    $loadedCount++
+                    if ($script:VerboseLoad) {
+                        Write-Host "  [Verbose] Set: $name" -ForegroundColor DarkGray
+                    }
+                } else {
+                    $skippedCount++
+                    if ($script:VerboseLoad) {
+                        Write-Host "  [Verbose] Skipped (already set): $name" -ForegroundColor DarkGray
+                    }
+                }
+            }
+        }
+        
+        if ($script:VerboseLoad) {
+            Write-Host "  [Verbose] Loaded $loadedCount variable(s), skipped $skippedCount existing" -ForegroundColor DarkGray
+        }
+    } elseif ($script:VerboseLoad) {
+        Write-Host "  [Verbose] No .env file found at: $envFile" -ForegroundColor DarkGray
+    }
+    
+    # Mark as loaded
+    $global:COPCLI_ENV_LOADED = $true
 }
 
 #endregion
@@ -71,6 +155,10 @@ function Start-NetworkCopilot {
         [Parameter(Position=0, ValueFromRemainingArguments)]
         [string[]]$Prompt
     )
+    
+    # Lazy-load environment variables when needed
+    # Note: This call is safe - function doesn't throw errors
+    Initialize-CopCLIEnvironment
     
     $agentFile = Join-Path $env:COPCLI_HOME "AGENTS.md"
     
@@ -369,7 +457,22 @@ function Show-Prompts {
 #region Status Display
 
 function Show-CopCLIStatus {
-    <# Show status of Copilot CLI environment #>
+    <#
+    .SYNOPSIS
+        Show status of Copilot CLI environment
+    .DESCRIPTION
+        Displays comprehensive status information about the Network Copilot CLI
+        environment including installed tools, environment variables, and config files.
+        Triggers lazy-loading of environment variables if not already loaded.
+    .EXAMPLE
+        Show-CopCLIStatus
+        Displays full environment status
+    #>
+    [CmdletBinding()]
+    param()
+    
+    # Lazy-load environment variables when status is requested
+    Initialize-CopCLIEnvironment
     
     Write-Host "`n╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
     Write-Host "║           Network Copilot CLI Environment                    ║" -ForegroundColor Cyan
@@ -437,7 +540,14 @@ function Show-CopCLIStatus {
 
 #endregion
 
-# Show status on load (optional - comment out if too verbose)
-# Show-CopCLIStatus
-
-Write-Host "Network Copilot CLI loaded. Type 'Show-CopCLIStatus' for environment info." -ForegroundColor DarkGray
+# Show loading status based on parameters
+if (-not $script:Quiet) {
+    if ($script:VerboseLoad) {
+        Write-Host "✓ Network Copilot CLI loaded (verbose mode)" -ForegroundColor Green
+        Write-Host "  Environment variables will be lazy-loaded when needed" -ForegroundColor DarkGray
+        Write-Host "  Type 'Show-CopCLIStatus' for full environment info" -ForegroundColor DarkGray
+    } else {
+        # Minimal output in default mode
+        Write-Host "✓ Network Copilot CLI ready" -ForegroundColor DarkGray
+    }
+}
